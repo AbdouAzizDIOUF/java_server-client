@@ -35,10 +35,19 @@ public class ValideateExpression {
         System.out.println(isValideCodeProd("AbduOziz"));
         System.out.println(isValideDecimal("24"));
         System.out.println(isValideDecimal("01"));
+        System.out.println(isValideNumSecOrNumCni("95486545487567"));
     }
 
     public static boolean isValideDecimal(String val) {
-        String regExp = "^[0-2][1-9]";
+        String regExp = "^[0-2][1-5]";
+        return val.matches( regExp );
+    }
+
+    public static boolean isValideNumSecOrNumCni(String val) {
+        String regExp = "^[1-9][0-9]{6}";
+         if (val.length()==13){
+           regExp = "^[1-9][0-9]{12}";
+        }
         return val.matches( regExp );
     }
 

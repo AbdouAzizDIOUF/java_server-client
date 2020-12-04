@@ -2,8 +2,10 @@ package serveur;
 
 import dao.AccesBD;
 import entity.Achat;
+import entity.Personne;
 import entity.Produit;
 
+import javax.swing.*;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -32,7 +34,6 @@ public class Serveur extends Thread{
     }
 
 
-
     class Service extends Thread
     {
         private Socket sock;
@@ -50,7 +51,6 @@ public class Serveur extends Thread{
         {
             boolean isOkay = false;
             try {
-
                 ObjectInputStream objectInputStream = new ObjectInputStream(sock.getInputStream());
                 ObjectOutputStream objectOutputStream=new ObjectOutputStream(sock.getOutputStream());
                 DataOutputStream dataOutputStream = new DataOutputStream(sock.getOutputStream());
@@ -63,42 +63,166 @@ public class Serveur extends Thread{
                     String password = (String) objectInputStream.readObject();
                     System.out.println("password : "+password);
                     isOkay = bdd.authentifier(username, password);
-                    objectOutputStream.writeObject(username);
-                    objectOutputStream.writeObject(password);
 
+                    if (isOkay){
+                        objectOutputStream.writeObject("Okay");
+                    }else {
+                        objectOutputStream.writeObject("notOkay");
+                    }
                     objectOutputStream.flush();
                 }while (!isOkay);
                 Produit p;
-                while (true){
-                    int status;
-                    do {
-                        String codeProduct = (String) objectInputStream.readObject();
-                        System.out.println(codeProduct);
-                        p = bdd.findProductByCode(codeProduct);
-                        objectOutputStream.writeObject(p);
-                        if (p!=null){
-                            status=20;
-                        }else {
-                            status = 1;
-                        }
-                        System.out.println(status);
-                    }while (status==1);
-
-                    Achat achat = (Achat) objectInputStream.readObject();
-                    System.out.println("idPod: "+achat.getProduit() +"\n"+
-                            "prixTotale: "+achat.getPrixTotal()+"\n"+
-                            "quantity: "+achat.getQuantity());
-
-                    String result = bdd.saveAchat(achat.getProduit(), achat.getPrixTotal(), achat.getQuantity());
-                    if ("Okay".equals(result)){
-                        System.out.println(result);
-                        objectOutputStream.writeObject(result);
+                String option;
+                while (true) {
+                    option = (String) objectInputStream.readObject();
+                    System.out.println(option);
+                    switch (option)
+                    {
+                        case "1":
+                            vente(objectOutputStream, objectInputStream);
+                            break;
+                        case "2":
+                            venteWichNumCarteVitale(objectOutputStream, objectInputStream);
+                            break;
+                        case "3":
+                            findProductByCode(objectOutputStream, objectInputStream);
+                            break;
+                        case "4":
+                            bilanVente(objectOutputStream, objectInputStream);
+                            break;
+                        case "5":
+                            bilanVentejournalier(objectOutputStream, objectInputStream);
+                            break;
                     }
+
                 }
             } catch (IOException | ClassNotFoundException | SQLException e) {
                 e.printStackTrace();
             }
+
+
+
         }
+
+
+        /**
+         *
+         * @param objectOutputStream
+         * @param objectInputStream
+         * @throws SQLException
+         * @throws IOException
+         * @throws ClassNotFoundException
+         */
+        void vente(ObjectOutputStream objectOutputStream, ObjectInputStream objectInputStream) throws SQLException, IOException, ClassNotFoundException {
+            Produit p;
+            int status;
+            do {
+                String codeProduct = (String) objectInputStream.readObject();
+                System.out.println(codeProduct);
+                p = bdd.findProductByCode(codeProduct);
+                objectOutputStream.writeObject(p);
+                if (p!=null) {
+                    status=20;
+                }else {
+                    status = 1;
+                }
+                System.out.println(status);
+            }while (p==null);
+            Achat achat = (Achat) objectInputStream.readObject();
+            System.out.println("idPod: "+achat.getProduit() +"\n"+
+                    "prixTotale: "+achat.getPrixTotal()+"\n"+
+                    "quantity: "+achat.getQuantity());
+
+            String result = bdd.saveAchat(achat.getProduit(), achat.getPrixTotal(), achat.getQuantity());
+            if ("Okay".equals(result)){
+                System.out.println(result);
+                objectOutputStream.writeObject(result);
+            }
+        }
+
+
+        /**
+         *
+         * @param objectOutputStream
+         * @param objectInputStream
+         * @throws SQLException
+         * @throws IOException
+         * @throws ClassNotFoundException
+         */
+        void venteWichNumCarteVitale(ObjectOutputStream objectOutputStream, ObjectInputStream objectInputStream) throws SQLException, IOException, ClassNotFoundException
+        {
+            Produit p;
+            Personne personne;
+            int status;
+            do {
+                String codeProduct = (String) objectInputStream.readObject();
+                System.out.println(codeProduct);
+                p = bdd.findProductByCode(codeProduct);
+                objectOutputStream.writeObject(p);
+                if (p!=null) {
+                    status=20;
+                }else {
+                    status = 1;
+                }
+                System.out.println(status);
+            }while (p==null);
+            do {
+                String numSec = (String) objectInputStream.readObject();
+                System.out.println(numSec);
+                personne = (Personne) bdd.verifCarteVitale(numSec);
+                objectOutputStream.writeObject(personne);
+            }while (personne==null);
+            Achat achat = (Achat) objectInputStream.readObject();
+            System.out.println("idPod: "+achat.getProduit() +"\n"+
+                    "prixTotale: "+achat.getPrixTotal()+"\n"+
+                    "quantity: "+achat.getQuantity());
+
+            String result = bdd.saveAchat(achat.getProduit(), achat.getPrixTotal(), achat.getQuantity());
+            if ("Okay".equals(result)){
+                System.out.println(result);
+                objectOutputStream.writeObject(result);
+            }
+        }
+
+        /**
+         *
+         * @param objectOutputStream
+         * @param objectInputStream
+         */
+        void findProductByCode(ObjectOutputStream objectOutputStream, ObjectInputStream objectInputStream) throws IOException, ClassNotFoundException {
+            Produit produit;
+            int status;
+            do {
+                String codeProduct = (String) objectInputStream.readObject();
+                System.out.println(codeProduct);
+                produit = bdd.findProductByCode(codeProduct);
+                objectOutputStream.writeObject(produit);
+            }while (produit==null);
+        }
+
+
+        /**
+         *
+         * @param objectOutputStream
+         * @param objectInputStream
+         * @throws SQLException
+         * @throws IOException
+         */
+        void bilanVente(ObjectOutputStream objectOutputStream, ObjectInputStream objectInputStream) throws SQLException, IOException {
+            objectOutputStream.writeObject(bdd.bilanProductVendus());
+        }
+
+        /**
+         *
+         * @param objectOutputStream
+         * @param objectInputStream
+         * @throws SQLException
+         * @throws IOException
+         */
+        void bilanVentejournalier(ObjectOutputStream objectOutputStream, ObjectInputStream objectInputStream) throws SQLException, IOException {
+            objectOutputStream.writeObject(bdd.bilanJournalierProductVendus());
+        }
+
     }
 
 }
