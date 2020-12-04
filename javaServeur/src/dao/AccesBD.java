@@ -125,6 +125,7 @@ public class AccesBD {
     }
 
     /**
+     * Permet d'enregistrer une vente
      *
      * @param prixTotal
      * @param qte
@@ -147,7 +148,7 @@ public class AccesBD {
     }
 
     /**
-     *
+     * Soustrait la quantite de produit vendu a la stock total du produit
      *
      * @param idProd
      * @param quantite
@@ -163,7 +164,7 @@ public class AccesBD {
         preparedStatement.executeUpdate();
     }
     /**
-     *
+     * Verifie l'existance d'un code de securite social valide
      * @param numSecSociele
      * @return
      * @throws SQLException
@@ -192,7 +193,7 @@ public class AccesBD {
     }
 
     /**
-     *
+     * Cette fonctio fais le bilan global des produits vendus
      *
      * @return
      * @throws SQLException
@@ -219,7 +220,7 @@ public class AccesBD {
 
 
     /**
-     *
+     * Cette fonction permette de lister les produit qui ont ete vendus aujord'hui
      *
      * @return
      * @throws SQLException
